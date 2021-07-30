@@ -95,7 +95,7 @@ const deck = {
 
 const getSuit = card => Object.keys(deck).find(suit => deck[suit].some(i => i === card))
 const getValue = card => Object.values(deck).filter(set => set.some(i => i === card))[0].findIndex(i => i === card)
-const getAbsoluteValue = card => getValue(card) + 13 * Object.keys(deck).findIndex(i => i === getSuit(card))
+const getAbsoluteValue = card => getValue(card) * 4 + Object.keys(deck).findIndex(i => i === getSuit(card))
 
 const guess = () => {
   // Validate input
