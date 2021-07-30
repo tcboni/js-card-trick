@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>🧙‍♂️</title>
+<style>
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: auto;
+  text-align: center;
+  font: 22px sans-serif;
+  color: #111827;
+  background: #F9FAFB;
+}
+button {
+  font-size: 100px;
+  appearance: none;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 10px;
+  text-transform: uppercase;
+  margin: 20px;
+  transition: 0.2s;
+}
+button:hover {
+  transform: scale(1.1)
+}
+.cardSelector {
+  font: inherit;
+  appearance: none;
+  cursor: pointer;
+}
+.cardSelector optgroup {
+  font-size: 50px;
+}
+.cardSelector option {
+  font-size: 100px;
+}
+.card {
+  min-width: 160px;
+  height: 250px;
+  text-align: center;
+  line-height: 1;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 200px;
+  border-radius: 12px;
+  padding: 10px;
+  border: 4px solid #000;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  margin: 10px;
+  transition: 0.2s;
+  backface-visibility: hidden;
+}
+.card.missing {
+  opacity: 0.5;
+}
+.card.woah {
+  opacity: 1;
+  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.5), 0 4px 10px -2px rgba(0, 0, 0, 0.3);
+}
+.secretCard {
+  position: relative;
+  display: inline-block;
+}
+.secretCard.flip .card.missing {
+  transform: rotateY(-180deg);
+}
+.secretCard .card.woah {
+  position: absolute;
+  left: 0;
+  transform: rotateY(-180deg);
+}
+.secretCard.flip .card.woah {
+  transform: rotateY(0);
+}
+.poof {
+  transform: scale(0);
+  opacity: 0;
+}
+</style>
+</head>
+<body>
+<script>
+const deck = {
+  clubs: [...'🃑🃒🃓🃔🃕🃖🃗🃘🃙🃚🃛🃝🃞'],
+  hearts: [...'🂱🂲🂳🂴🂵🂶🂷🂸🂹🂺🂻🂽🂾'],
+  spades: [...'🂡🂢🂣🂤🂥🂦🂧🂨🂩🂪🂫🂭🂮'],
+  diamonds: [...'🃁🃂🃃🃄🃅🃆🃇🃈🃉🃊🃋🃍🃎'],
+}
+
+const getSuit = card => Object.keys(deck).find(suit => deck[suit].some(i => i === card))
+const getValue = card => Object.values(deck).filter(set => set.some(i => i === card))[0].findIndex(i => i === card)
+const getAbsoluteValue = card => getValue(card) + 13 * Object.keys(deck).findIndex(i => i === getSuit(card))
+
+const guess = () => {
+  // Validate input
+  let input = []
+  for(let i = 1; i <= 4; i++) {
+    input.push(document.getElementById(`cardSelector-${i}`).value)
+  }
+  if(input.some(i => i === '?')) {
+    return alert('🔥🧙‍♂️🔥 Select the first four visible cards!')
+  }
+  if(new Set(input).size !== input.length) {
+    return alert('🔥🧙‍♂️🔥 Select four DIFFERENT cards!')
+  }
+
+  // Start guessing!
+  const value0 = input.shift()
+  const secretSuit = getSuit(value0)
+  const secretLowerValue = getValue(value0)
+
+  input = input.map(i => getAbsoluteValue(i))
+  input = input.map(i => i === Math.max(...input) ? 2 : i === Math.min(...input) ? 0 : 1)
+  const secretValueDiff = 1 + input[0] * 2 + (input[1] > input[2])
+  
+  const secretValue = (secretLowerValue + secretValueDiff) % 13
+
+  // Return card
+  const secretCard = deck[secretSuit][secretValue]
+  document.getElementById('secretCard').classList.add('flip')
+  document.getElementById('secretCardRevealed').textContent = secretCard
+  document.getElementById('button').classList.add('poof')
+}
+
+const render = () => {
+  // Render text
+  const title = document.createElement('h1')
+  title.textContent = '🧙‍♂️ JS Mind reader!'
+  document.body.appendChild(title)
+  const p = document.createElement('p')
+  p.textContent = 'Select the first four visible cards and click the crystal ball:'
+  document.body.appendChild(p)
+
+  // Render 5 card holders
+  const cards = document.createElement('div')
+  for(let i = 1; i <= 4; i++) {
+    const cardSelector = document.createElement('select')
+    cardSelector.id = `cardSelector-${i}`
+    cardSelector.classList.add('cardSelector', 'card')
+    const item = document.createElement('option')
+    item.textContent = '?'
+    cardSelector.appendChild(item)
+    for(const suit in deck) {
+      for(let i = 0; i < deck[suit].length; i++) {
+        const item = document.createElement('option')
+        item.textContent = deck[suit][i]
+        cardSelector.appendChild(item)
+      }
+      cards.appendChild(cardSelector)
+    }
+  }
+  const secretCard = document.createElement('div')
+  secretCard.id = 'secretCard'
+  secretCard.classList.add('secretCard')
+  const secretCardMissing = document.createElement('div')
+  secretCardMissing.classList.add('card', 'missing')
+  secretCardMissing.textContent = '?'
+  secretCard.appendChild(secretCardMissing)
+  const secretCardRevealed = document.createElement('div')
+  secretCardRevealed.id = 'secretCardRevealed'
+  secretCardRevealed.classList.add('card', 'woah')
+  secretCardRevealed.textContent = '?'
+  secretCard.appendChild(secretCardRevealed)
+  cards.appendChild(secretCard)
+
+  document.body.appendChild(cards)
+
+  // Render button
+  const button = document.createElement('button')
+  button.id = 'button'
+  button.textContent = '🔮'
+  button.addEventListener('click', guess)
+  document.body.appendChild(button)
+}
+render()
+</script>
+</body>
+</html>
